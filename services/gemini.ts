@@ -4,6 +4,7 @@ import { Recipe } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+// Generates a custom nutrigenomic recipe based on a goal and concerns
 export const generateProtocolRecipe = async (targetGoal: string, userConcerns: string): Promise<Recipe> => {
   const prompt = `Eres un experto en nutrigenómica con 20 años de experiencia integrando medicina funcional y ciencia culinaria.
 
@@ -37,7 +38,7 @@ INSTRUCCIONES CRÍTICAS:
 
 6. EVITA ingredientes raros o inaccesibles.
 
-Genera la respuesta estrictamente en JSON.`;
+Genera la respuesta estrictamente en JSON. El campo ingredients debe ser un array de objetos, cada uno con name, amount, reason, category (uno de: base, crucifera, proteina, grasa, bioactivo, aderezo) y opcionalmente power.`;
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -57,16 +58,21 @@ Genera la respuesta estrictamente en JSON.`;
               mechanism: { type: Type.STRING },
               evidence: { type: Type.STRING },
               timeToEffect: { type: Type.STRING }
-            }
+            },
+            propertyOrdering: ["mechanism", "evidence", "timeToEffect"]
           },
           ingredients: {
-            type: Type.OBJECT,
-            properties: {
-              base: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, amount: { type: Type.STRING }, reason: { type: Type.STRING } } } },
-              bioactives: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, amount: { type: Type.STRING }, power: { type: Type.STRING } } } },
-              protein: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, amount: { type: Type.STRING } } } },
-              fat: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, amount: { type: Type.STRING } } } },
-              dressing: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { name: { type: Type.STRING }, amount: { type: Type.STRING }, reason: { type: Type.STRING } } } }
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                name: { type: Type.STRING },
+                amount: { type: Type.STRING },
+                reason: { type: Type.STRING },
+                power: { type: Type.STRING },
+                category: { type: Type.STRING, description: "One of: base, crucifera, proteina, grasa, bioactivo, aderezo" }
+              },
+              propertyOrdering: ["name", "amount", "reason", "category", "power"]
             }
           },
           preparation: { type: Type.ARRAY, items: { type: Type.STRING } },
@@ -78,7 +84,8 @@ Genera la respuesta estrictamente en JSON.`;
               whenToEat: { type: Type.STRING },
               frequency: { type: Type.STRING },
               combinesWith: { type: Type.STRING }
-            }
+            },
+            propertyOrdering: ["whenToEat", "frequency", "combinesWith"]
           },
           smartRotation: { type: Type.STRING }
         }
@@ -91,6 +98,7 @@ Genera la respuesta estrictamente en JSON.`;
   return parsed;
 };
 
+// Provides interactive chat for salad customization
 export const chatWithAI = async (history: { role: 'user' | 'model', parts: { text: string }[] }[]): Promise<string> => {
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -107,6 +115,7 @@ export const chatWithAI = async (history: { role: 'user' | 'model', parts: { tex
   return response.text;
 }
 
+// Analyzes provided ingredients for nutrigenomic synergies
 export const checkSynergyWithAI = async (ingredients: string[]): Promise<string> => {
     const prompt = `Analiza estos ingredientes para una ensalada nutrigenómica: ${ingredients.join(', ')}. 
     Identifica sinergias positivas (ej. brócoli+mostaza) o componentes faltantes según la regla de los 5 componentes. 
