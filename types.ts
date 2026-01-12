@@ -1,11 +1,11 @@
 
 export enum AppMode {
-  CREATE_SALAD = 1,
-  GENOMIC_DESIGN = 2,
-  CHECK_SYNERGY = 3,
-  LEARN_TECHNIQUES = 4,
-  LEARN_NUTRIGENOMICS = 5,
-  SHOPPING_LIST = 6,
+  ELEGIR_PROTOCOLO = 1,
+  BANCO_RECETAS = 2,
+  VERIFICADOR_SINERGIAS = 3,
+  BIBLIOTECA = 4,
+  TECNICAS = 5,
+  LISTA_COMPRAS = 6,
   TROUBLESHOOTING = 7,
   DASHBOARD = 0
 }
@@ -25,11 +25,21 @@ export interface Synergy {
   id: string;
   title: string;
   rule: string;
-  evidenceLevel: number; // 1-5 stars
+  evidenceLevel: number;
   science: string;
   howToApply: string[];
   commonMistakes: string[];
   alternatives: string[];
+}
+
+export interface Technique {
+  id: string;
+  name: string;
+  duration: string;
+  evidenceLevel: number;
+  why: string;
+  steps: string[];
+  videoTip?: string;
 }
 
 export interface Ingredient {
@@ -37,9 +47,11 @@ export interface Ingredient {
   amount: string;
   reason: string;
   power?: string;
+  category: 'base' | 'crucifera' | 'proteina' | 'grasa' | 'bioactivo' | 'aderezo';
 }
 
 export interface Recipe {
+  id: string;
   name: string;
   target: string;
   molecularGoalDesc: string;
@@ -48,13 +60,7 @@ export interface Recipe {
     evidence: string;
     timeToEffect: string;
   };
-  ingredients: {
-    base: Ingredient[];
-    bioactives: Ingredient[];
-    protein: Ingredient[];
-    fat: Ingredient[];
-    dressing: Ingredient[];
-  };
+  ingredients: Ingredient[];
   preparation: string[];
   totalTime: string;
   secret: string;
@@ -64,4 +70,10 @@ export interface Recipe {
     combinesWith: string;
   };
   smartRotation: string;
+}
+
+export interface TroubleshootingItem {
+  issue: string;
+  diagnosis: string[];
+  solutions: { title: string; steps: string[]; impact: string }[];
 }
